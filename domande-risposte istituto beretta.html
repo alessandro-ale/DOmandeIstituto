@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Istituto Beretta Domande-Risposte</title>
+    
+    <!-- Importa il font Pacifico da Google Fonts per domande e risposte -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Lobster&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #003366;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-family: 'Lobster', cursive; /* Applica il font Lobster al titolo */
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+        }
+        .question-section, .answer-section {
+            background-color: #ffffff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .question-section input, .answer-section input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .question-section button, .answer-section button {
+            background-color: #003366;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .question-section button:hover, .answer-section button:hover {
+            background-color: #00509e;
+        }
+        .question-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .question-list li {
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            font-family: 'Pacifico', cursive;  /* Applica il font Pacifico alle domande */
+        }
+        .question-list li .answers {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        .answer {
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            font-family: 'Pacifico', cursive;  /* Applica il font Pacifico alle risposte */
+        }
+        .reset-button {
+            background-color: #d9534f;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .reset-button:hover {
+            background-color: #c9302c;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Istituto Beretta Domande-Risposte</h1>
+    <p>Fai una domanda e rispondi a quelle degli altri!</p>
+</header>
+
+<div class="container">
+    <section class="question-section">
+        <h2>Fai una domanda</h2>
+        <input type="text" id="question-input" placeholder="Scrivi la tua domanda...">
+        <button onclick="addQuestion()">Pubblica domanda</button>
+    </section>
+
+    <section class="answer-section">
+        <h2>Rispondi alle domande</h2>
+        <ul class="question-list" id="question-list">
+            <!-- Le domande e risposte saranno inserite dinamicamente qui -->
+        </ul>
+        <input type="text" id="answer-input" placeholder="Scrivi la tua risposta...">
+        <button onclick="addAnswer()">Pubblica risposta</button>
+    </section>
+
+    <!-- Pulsante per resettare le domande e risposte -->
+    <button class="reset-button" onclick="resetForum()">Resetta il forum</button>
+</div>
+
+<script>
+    // Carica le domande salvate nel localStorage al caricamento della pagina
+    let questions = JSON.parse(localStorage.getItem('questions')) || [];
+    let selectedQuestionIndex = null;
+
+    // Funzione per aggiungere una domanda
+    function addQuestion() {
+        const questionInput = document.getElementById('question-input');
+        const questionText = questionInput.value.trim();
+        
+        if (questionText) {
+            questions.push({ question: questionText, answers: [] });
+            questionInput.value = '';
+            saveQuestions();
+            displayQuestions();
+        }
+    }
+
+    // Funzione per visualizzare le domande
+    function displayQuestions() {
+        const questionList = document.getElementById('question-list');
+        questionList.innerHTML = '';
+
+        questions.forEach((q, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>Domanda:</strong> ${q.question} 
+                <button onclick="selectQuestion(${index})">Rispondi</button>
+                <div class="answers" id="answers-${index}"></div>`;
+            questionList.appendChild(li);
+        });
+    }
+
+    // Funzione per selezionare una domanda per rispondere
+    function selectQuestion(index) {
+        selectedQuestionIndex = index;
+        const answerInput = document.getElementById('answer-input');
+        answerInput.value = '';
+        displayAnswers();
+    }
+
+    // Funzione per aggiungere una risposta
+    function addAnswer() {
+        const answerInput = document.getElementById('answer-input');
+        const answerText = answerInput.value.trim();
+        
+        if (answerText && selectedQuestionIndex !== null) {
+            questions[selectedQuestionIndex].answers.push(answerText);
+            answerInput.value = '';
+            saveQuestions();
+            displayAnswers();
+            displayQuestions();
+        }
+    }
+
+    // Funzione per visualizzare le risposte
+    function displayAnswers() {
+        if (selectedQuestionIndex !== null) {
+            const answersContainer = document.getElementById(`answers-${selectedQuestionIndex}`);
+            answersContainer.innerHTML = '';
+
+            questions[selectedQuestionIndex].answers.forEach(answer => {
+                const answerDiv = document.createElement('div');
+                answerDiv.classList.add('answer');
+                answerDiv.textContent = answer;
+                answersContainer.appendChild(answerDiv);
+            });
+        }
+    }
+
+    // Funzione per salvare le domande nel localStorage
+    function saveQuestions() {
+        localStorage.setItem('questions', JSON.stringify(questions));
+    }
+
+    // Funzione per resettare le domande e risposte
+    function resetForum() {
+        const password = prompt("Inserisci la password per resettare il forum:");
+        
+        if (password === "ABC1711") {
+            // Se la password è corretta, chiedi conferma
+            const confirmReset = confirm("Vuoi davvero resettare il forum? Tutte le domande e risposte saranno cancellate.");
+            
+            if (confirmReset) {
+                localStorage.removeItem('questions'); // Rimuove tutte le domande salvate
+                questions = []; // Resetta la variabile che contiene le domande
+                displayQuestions(); // Rende vuoto il forum sulla pagina
+                alert("Il forum è stato resettato.");
+            }
+        } else {
+            alert("Password errata! Non è possibile resettare il forum.");
+        }
+    }
+
+    // Carica le domande iniziali quando la pagina è pronta
+    displayQuestions();
+</script>
+
+</body>
+</html>
